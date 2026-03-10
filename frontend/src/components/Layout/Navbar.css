@@ -1,0 +1,111 @@
+.app-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(8px);
+}
+
+.app-navbar__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.9rem 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.app-navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: var(--text-900);
+  font-weight: 700;
+}
+
+.app-navbar__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.28);
+}
+
+.app-navbar__links {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.app-navbar__link {
+  text-decoration: none;
+  color: var(--text-700);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.app-navbar__link:hover {
+  background: var(--brand-100);
+  color: #9a3412;
+}
+
+.app-navbar__link.active {
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  color: #fff;
+}
+
+.app-navbar__logout {
+  border: 1px solid #fed7aa;
+  background: #fff;
+  color: #9a3412;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  min-height: 40px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.app-navbar__logout:hover {
+  background: #fff7ed;
+}
+
+@media (max-width: 640px) {
+  .app-navbar__inner {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .app-navbar__brand span {
+    font-size: 0.92rem;
+  }
+
+  .app-navbar__logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 0.86rem;
+  }
+
+  .app-navbar__links {
+    gap: 0.45rem;
+  }
+
+  .app-navbar__link,
+  .app-navbar__logout {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+    min-height: 36px;
+  }
+}

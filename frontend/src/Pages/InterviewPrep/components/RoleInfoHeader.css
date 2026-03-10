@@ -1,0 +1,114 @@
+.role-header {
+  max-width: 1200px;
+  margin: 0 auto 1.2rem;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #fdba74;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.role-header-background {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.role-header-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 55%);
+}
+
+.role-header-content {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  padding: 1.35rem 1.25rem;
+}
+
+.role-header-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.role-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.role-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.3vw, 2rem);
+  font-weight: 800;
+}
+
+.role-topics {
+  margin: 0.35rem 0 0;
+  font-weight: 600;
+  opacity: 0.95;
+  line-height: 1.4;
+}
+
+.role-description {
+  margin: 0.4rem 0 0;
+  opacity: 0.9;
+  line-height: 1.45;
+  max-width: 70ch;
+}
+
+.role-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.role-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.68rem 0.62rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+}
+
+.role-stat-icon {
+  opacity: 0.95;
+}
+
+.role-stat-value {
+  display: block;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.role-stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.92;
+  line-height: 1.2;
+}
+
+@media (max-width: 720px) {
+  .role-header-content {
+    padding: 1rem;
+  }
+
+  .role-title {
+    font-size: 1.25rem;
+  }
+
+  .role-stats {
+    grid-template-columns: 1fr;
+  }
+}

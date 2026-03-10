@@ -1,0 +1,128 @@
+.question-card {
+  background: #fff;
+  border: 1px solid #fed7aa;
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  padding: 0.95rem;
+  width: 100%;
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.question-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.question-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.question-title {
+  margin: 0;
+  color: var(--text-900);
+  line-height: 1.4;
+  font-size: 1.02rem;
+  max-width: 72ch;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.learn-more-button,
+.expand-button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.82rem;
+  min-height: 38px;
+}
+
+.learn-more-button {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+
+.learn-more-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.expand-button {
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  color: #fff;
+}
+
+.answer-container {
+  overflow: hidden;
+  transition: max-height 0.28s ease;
+}
+
+.answer-content {
+  padding-top: 0.9rem;
+}
+
+.answer-section {
+  border-top: 1px solid #ffedd5;
+  padding-top: 0.8rem;
+}
+
+.answer-question-text {
+  margin: 0 0 0.35rem;
+  color: var(--text-900);
+  font-size: 0.92rem;
+}
+
+.answer-text {
+  margin: 0;
+  color: var(--text-700);
+  line-height: 1.55;
+}
+
+@media (max-width: 740px) {
+  .question-card {
+    border-radius: 14px;
+    padding: 0.85rem;
+  }
+
+  .question-title {
+    font-size: 0.95rem;
+  }
+
+  .question-header {
+    flex-direction: column;
+  }
+
+  .card-actions {
+    width: 100%;
+  }
+
+  .learn-more-button,
+  .expand-button {
+    flex: 1;
+  }
+}

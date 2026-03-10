@@ -1,0 +1,313 @@
+/* Developer Card Component - Matching Dashboard Style */
+.developer-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+.developer-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+/* Header Section */
+.developer-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.developer-card__badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.developer-card__role-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.developer-card__role {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.developer-card__technologies {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Stats Section */
+.developer-card__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.developer-card__stat-badge {
+  display: inline-block;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  width: fit-content;
+}
+
+/* Description Section */
+.developer-card__description {
+  flex: 1;
+  margin-bottom: 16px;
+}
+
+.developer-card__description p {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Footer Section */
+.developer-card__footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.developer-card__add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+.developer-card__add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.add-icon {
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Animation for card entrance */
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.developer-card {
+  animation: cardSlideIn 0.3s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .developer-card {
+    padding: 20px;
+    min-height: 220px;
+  }
+  
+  .developer-card__badge {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+  
+  .developer-card__role {
+    font-size: 18px;
+  }
+  
+  .developer-card__technologies {
+    font-size: 13px;
+  }
+  
+  .developer-card__stat-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .developer-card__description p {
+    font-size: 13px;
+  }
+  
+  .developer-card__add-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .developer-card {
+    padding: 16px;
+    min-height: 200px;
+  }
+  
+  .developer-card__header {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .developer-card__badge {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  
+  .developer-card__role {
+    font-size: 16px;
+  }
+  
+  .developer-card__add-btn {
+    padding: 4px 8px;
+  }
+}
+
+/* Demo Layout Styles */
+.developer-cards-demo {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+}
+
+.demo-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.demo-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.demo-subtitle {
+  font-size: 1.1rem;
+  color: #64748b;
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.5;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.developer-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .developer-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .developer-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1400px) {
+  .developer-cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .developer-cards-demo {
+    padding: 1rem;
+  }
+  
+  .demo-header {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .demo-title {
+    font-size: 2rem;
+  }
+  
+  .demo-subtitle {
+    font-size: 1rem;
+  }
+  
+  .developer-cards-grid {
+    gap: 1.5rem;
+  }
+}
+
+/* Focus states for accessibility */
+.developer-card:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.developer-card__add-btn:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
