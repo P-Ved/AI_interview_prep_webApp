@@ -6,32 +6,102 @@ import "./CreateSessionForm.css";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 
+const TARGET_QUESTION_COUNT = 10;
+
 const CreateSessionForm = ({ onClose, onSessionCreated }) => {
     const [formData, setFormData] = useState({
         role: "",
         experience: "",
-        topicToFocus: "", // Changed from topicsToFocus to topicToFocus (singular)
+        topicToFocus: "",
         description: "",
     });
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [loadingStep, setLoadingStep] = useState('');
+    const [loadingStep, setLoadingStep] = useState("");
 
-    const buildFallbackQuestions = (role, topicToFocus) => ([
-        {
-            question: `What are the core fundamentals you must know for ${role}?`,
-            answer: `Start with the basics of ${topicToFocus}, explain one concept clearly, and show a simple real-world example.`,
-        },
-        {
-            question: `How would you explain your approach to solving a ${topicToFocus} problem in an interview?`,
-            answer: `Clarify requirements, break the problem into steps, discuss trade-offs, and provide a clean, testable solution.`,
-        },
-        {
-            question: `What common mistakes should be avoided in ${topicToFocus}?`,
-            answer: `Avoid memorized answers, focus on first principles, and explain why your chosen approach is better than alternatives.`,
-        },
-    ]);
+    const buildFallbackQuestions = (
+        role,
+        topicToFocus,
+        count = TARGET_QUESTION_COUNT,
+        existingQuestions = []
+    ) => {
+        const roleText = role || "this role";
+        const topicText = topicToFocus || "this topic";
+        const existing = new Set(
+            existingQuestions
+                .map((item) => String(item?.question || "").trim().toLowerCase())
+                .filter(Boolean)
+        );
+
+        const templates = [
+            {
+                question: `What are the core fundamentals you must know for ${roleText}?`,
+                answer: `Start with the basics of ${topicText}, explain one concept clearly, and give one real-world example.`,
+            },
+            {
+                question: `How would you solve a practical ${topicText} problem in an interview?`,
+                answer: "Clarify requirements first, break the problem into steps, and explain trade-offs in your chosen approach.",
+            },
+            {
+                question: `What common mistakes should be avoided in ${topicText}?`,
+                answer: "Highlight frequent pitfalls, explain their impact, and share quick ways to prevent them.",
+            },
+            {
+                question: `How do you debug issues related to ${topicText}?`,
+                answer: "Reproduce the issue, inspect logs and behavior, isolate root cause, and validate the fix.",
+            },
+            {
+                question: `How do you optimize performance when working with ${topicText}?`,
+                answer: "Measure bottlenecks first, apply focused optimizations, and confirm improvement with tests or metrics.",
+            },
+            {
+                question: `What security practices matter most for ${topicText}?`,
+                answer: "Cover input validation, access controls, and safe handling of sensitive data and secrets.",
+            },
+            {
+                question: `How would you test a ${topicText}-based solution?`,
+                answer: "Use a mix of unit and integration tests, include edge cases, and automate checks in CI.",
+            },
+            {
+                question: `When would you choose one approach over another in ${topicText}?`,
+                answer: "Compare alternatives by complexity, scalability, maintainability, and team needs before deciding.",
+            },
+            {
+                question: `Describe a real-world challenge in ${topicText} and your solution.`,
+                answer: "State the problem, describe your steps, then explain the outcome and key lessons.",
+            },
+            {
+                question: `How do you explain ${topicText} to a junior developer?`,
+                answer: "Use simple language, one concrete example, and a clear mental model to build intuition.",
+            },
+        ];
+
+        const fallback = [];
+
+        for (const template of templates) {
+            const key = template.question.trim().toLowerCase();
+            if (existing.has(key)) continue;
+            existing.add(key);
+            fallback.push(template);
+            if (fallback.length >= count) break;
+        }
+
+        while (fallback.length < count) {
+            const index = fallback.length + 1;
+            const question = `What interview strategy #${index} would you use for ${topicText}?`;
+            const key = question.toLowerCase();
+            if (existing.has(key)) continue;
+            existing.add(key);
+            fallback.push({
+                question,
+                answer:
+                    "Start with a definition, give one practical example, and mention one trade-off to show depth.",
+            });
+        }
+
+        return fallback.slice(0, count);
+    };
 
     const handleChange = (key, value) => {
         setFormData((prevData) => ({
@@ -43,9 +113,9 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
     const handleCreateSession = async (e) => {
         e.preventDefault();
 
-        const { role, experience, topicToFocus } = formData; // Changed from topicsToFocus to topicToFocus
+        const { role, experience, topicToFocus } = formData;
 
-        if (!role.trim() || !experience.trim() || !topicToFocus.trim()) { // Changed from topicsToFocus to topicToFocus
+        if (!role.trim() || !experience.trim() || !topicToFocus.trim()) {
             setError("Please fill all the required fields.");
             return;
         }
@@ -54,22 +124,19 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
         setError(null);
 
         try {
-            // Show loading toast
-            const loadingToast = toast.loading('Creating your interview session...');
-            
-            // Now field names match exactly what works in Postman
+            const loadingToast = toast.loading("Creating your interview session...");
+
             const requestData = {
                 role: formData.role.trim(),
                 experience: formData.experience.trim(),
                 topicToFocus: formData.topicToFocus.trim(),
-                numberOfQuestions: 5,
+                numberOfQuestions: TARGET_QUESTION_COUNT,
             };
 
-            console.log("🚀 Creating session with data:", requestData);
+            console.log("Creating session with data:", requestData);
 
-            // Step 1: Generate AI questions (fallback if AI is rate limited)
-            setLoadingStep('Generating 5 AI questions...');
-            toast.loading('Generating 5 interview questions...', { id: loadingToast });
+            setLoadingStep(`Generating ${TARGET_QUESTION_COUNT} AI questions...`);
+            toast.loading(`Generating ${TARGET_QUESTION_COUNT} interview questions...`, { id: loadingToast });
             let generatedQuestions = [];
 
             try {
@@ -78,81 +145,108 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
                     requestData,
                     {
                         headers: {
-                            'Content-Type': 'application/json',
+                            "Content-Type": "application/json",
                         },
-                        timeout: 30000
+                        timeout: 30000,
                     }
                 );
 
-                generatedQuestions = Array.isArray(aiResponse.data) ? aiResponse.data : [];
-                console.log(`✅ Generated ${generatedQuestions.length} questions`);
+                generatedQuestions = Array.isArray(aiResponse.data)
+                    ? aiResponse.data
+                          .filter((item) => item?.question && item?.answer)
+                          .map((item) => ({
+                              question: String(item.question).trim(),
+                              answer: String(item.answer).trim(),
+                          }))
+                    : [];
+                if (generatedQuestions.length < TARGET_QUESTION_COUNT) {
+                    const missing = TARGET_QUESTION_COUNT - generatedQuestions.length;
+                    const fillers = buildFallbackQuestions(
+                        requestData.role,
+                        requestData.topicToFocus,
+                        missing,
+                        generatedQuestions
+                    );
+                    generatedQuestions = [...generatedQuestions, ...fillers];
+                } else {
+                    generatedQuestions = generatedQuestions.slice(0, TARGET_QUESTION_COUNT);
+                }
+
+                console.log(`Generated ${generatedQuestions.length} questions`);
             } catch (aiError) {
                 if (aiError?.response?.status === 429) {
                     const retryAfter = aiError.retryAfter || aiError.response?.data?.retryAfter || 60;
-                    toast.error(`AI is rate limited right now. Creating session with starter questions. Try full AI generation after ${retryAfter}s.`, { id: loadingToast, duration: 6000 });
-                    generatedQuestions = buildFallbackQuestions(requestData.role, requestData.topicToFocus);
+                    toast.error(
+                        `AI is rate limited right now. Creating session with starter questions. Try full AI generation after ${retryAfter}s.`,
+                        { id: loadingToast, duration: 6000 }
+                    );
+                    generatedQuestions = buildFallbackQuestions(
+                        requestData.role,
+                        requestData.topicToFocus,
+                        TARGET_QUESTION_COUNT
+                    );
                 } else if (aiError?.code === "ECONNABORTED") {
-                    toast.error("AI took too long to respond. Creating session with starter questions.", { id: loadingToast, duration: 5000 });
-                    generatedQuestions = buildFallbackQuestions(requestData.role, requestData.topicToFocus);
+                    toast.error("AI took too long to respond. Creating session with starter questions.", {
+                        id: loadingToast,
+                        duration: 5000,
+                    });
+                    generatedQuestions = buildFallbackQuestions(
+                        requestData.role,
+                        requestData.topicToFocus,
+                        TARGET_QUESTION_COUNT
+                    );
                 } else {
                     throw aiError;
                 }
             }
 
-            // Step 2: Create session with generated questions
-            setLoadingStep('Saving session to database...');
-            toast.loading('Creating session...', { id: loadingToast });
+            setLoadingStep("Saving session to database...");
+            toast.loading("Creating session...", { id: loadingToast });
             const response = await axiosInstance.post(API_PATHS.SESSION.CREATE, {
                 ...formData,
                 questions: generatedQuestions,
             });
 
-            console.log("🎉 Session creation response:", response.data);
+            console.log("Session creation response:", response.data);
 
-            // Fix: Check for the correct response structure
             if (response.data?.success && response.data?.data) {
                 const newSession = response.data.data;
-                
-                console.log("✅ New session created:", newSession);
 
-                // Show success message
-                setLoadingStep('Session created successfully!');
+                console.log("New session created:", newSession);
+
+                setLoadingStep("Session created successfully!");
                 toast.success(`"${newSession.role}" session created successfully!`, {
                     id: loadingToast,
-                    duration: 4000
+                    duration: 4000,
                 });
 
-                // Update dashboard immediately (this will make the new card appear)
                 if (typeof onSessionCreated === "function") {
                     onSessionCreated(newSession);
-                    console.log("🔄 Dashboard updated with new session");
+                    console.log("Dashboard updated with new session");
                 }
 
-                // Close modal automatically after success
                 setTimeout(() => {
                     if (typeof onClose === "function") {
                         onClose();
                     }
-                }, 1500); // Close after 1.5 seconds to let user see success message
-
-                // Don't navigate immediately - stay on dashboard to see the new card
-                // User can click on the card if they want to view it
-                
+                }, 1500);
             } else {
-                throw new Error('Invalid response format from server');
+                throw new Error("Invalid response format from server");
             }
-
         } catch (error) {
-            console.error("❌ Session creation error:", error);
-            console.error("❌ Response data:", error.response?.data);
+            console.error("Session creation error:", error);
+            console.error("Response data:", error.response?.data);
 
             let errorMessage = "Failed to create session. Please try again.";
-            
+
             if (error.response?.data?.message) {
                 errorMessage = error.response.data.message;
             } else if (error.response?.status === 429) {
-                const retryAfter = error.retryAfter || error.response?.data?.retryAfter || error.response?.headers?.['retry-after'];
-                errorMessage = `Service is rate limited. Please retry after ${retryAfter || 'a few'} seconds.`;
+                const retryAfter =
+                    error.retryAfter ||
+                    error.response?.data?.retryAfter ||
+                    error.response?.headers?.["retry-after"];
+                errorMessage = `Service is rate limited. Please retry after ${retryAfter || "a few"} seconds.`;
             } else if (error.response?.data?.error) {
                 errorMessage = error.response.data.error;
             } else if (error.code === "ECONNABORTED") {
@@ -160,14 +254,12 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
-            // Show error toast
+
             toast.error(errorMessage, { duration: 6000 });
             setError(errorMessage);
-            
         } finally {
             setIsLoading(false);
-            setLoadingStep('');
+            setLoadingStep("");
         }
     };
 
@@ -183,15 +275,9 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
                 <div className="create-session-header">
                     <div className="header-content">
                         <h2 className="modal-title">Create New Session</h2>
-                        <p className="modal-subtitle">
-                            Set up your interview preparation session
-                        </p>
+                        <p className="modal-subtitle">Set up your interview preparation session</p>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="close-button"
-                        aria-label="Close modal"
-                    >
+                    <button onClick={onClose} className="close-button" aria-label="Close modal">
                         <X size={20} />
                     </button>
                 </div>
@@ -216,8 +302,8 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
 
                         <Input
                             label="Topic to Focus"
-                            value={formData.topicToFocus} // Changed from topicsToFocus to topicToFocus
-                            onChange={(value) => handleChange("topicToFocus", value)} // Changed from topicsToFocus to topicToFocus
+                            value={formData.topicToFocus}
+                            onChange={(value) => handleChange("topicToFocus", value)}
                             placeholder="e.g., React, JavaScript, CSS, System Design"
                             required
                         />
@@ -242,7 +328,7 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
                             <span className="error-text">{error}</span>
                         </div>
                     )}
-                    
+
                     {isLoading && loadingStep && (
                         <div className="loading-progress">
                             <div className="loading-progress-inner">

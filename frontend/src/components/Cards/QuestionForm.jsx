@@ -6,7 +6,7 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
     role: '',
     experience: '',
     topicToFocus: '',
-    numberOfQuestions: 3
+    numberOfQuestions: 10
   });
 
   const handleSubmit = () => {
@@ -21,7 +21,7 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'numberOfQuestions' ? parseInt(value) || 1 : value
+      [name]: name === 'numberOfQuestions' ? parseInt(value, 10) || 10 : value
     }));
   };
 

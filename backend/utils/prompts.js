@@ -1,23 +1,27 @@
-const Question = require("../models/Question")
-
 const questionAnswerPrompt = (role, experience, topicToFocus, numberOfQuestions) => `
-You are an interviewing expert. Create exactly ${numberOfQuestions} SHORT, RELEVANT interview questions for a ${role} with ${experience} experience focused ONLY on "${topicToFocus}".
+You are an interview coach.
+Generate exactly ${numberOfQuestions} interview Q&A pairs for:
+- Role: ${role}
+- Experience: ${experience}
+- Topic: ${topicToFocus}
 
 Rules:
-- Start from fundamentals and progress to advanced (ordered list from basic → intermediate → advanced).
-- Keep EACH question concise (max 2–3 lines).
-- Stay strictly on the selected topic; avoid unrelated areas.
-- For each question, also generate a brief, interview-ready answer (2–3 lines). No long essays.
-- Output MUST be valid JSON array only in this exact shape:
-[
-  {"question": "...", "answer": "..."}
-]
+1. Keep each question short and practical.
+2. Keep each answer to 1-2 concise sentences.
+3. Cover progression from fundamental to advanced.
+4. Avoid duplicates and avoid unrelated topics.
+5. Return JSON only in this exact shape:
+{
+  "questions": [
+    {"question": "...", "answer": "..."}
+  ]
+}
+Do not include markdown or extra keys.
 `;
-
 
 const conceptExplainPrompt = (question) => `
 You are an expert software teacher.
-Explain the following interview question in simple, beginner-friendly language and progress from basics → advanced.
+Explain the following interview question in simple, beginner-friendly language and progress from basics to advanced.
 
 - Question: "${question}"
 - Keep sentences short and clear; avoid jargon unless explained.
@@ -32,6 +36,5 @@ Explain the following interview question in simple, beginner-friendly language a
 
 Important: Only return JSON. No extra text.
 `;
-
 
 module.exports = { questionAnswerPrompt, conceptExplainPrompt };
