@@ -31,26 +31,21 @@ const InterviewPrep = () => {
 
   const getShortAnswer = (text) => {
     if (!text) return "";
-    // Remove code fences/markdown and extra whitespace
     let clean = String(text)
-      .replace(/```[\s\S]*?```/g, " ") // remove fenced code blocks
-      .replace(/`([^`]+)`/g, "$1") // inline code
-      .replace(/\*\*/g, "") // bold
-      .replace(/\*/g, "") // bullets/emphasis
-      .replace(/\s+/g, " ")
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/\r\n/g, "\n")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
 
-    // Split into sentences and keep first 2
-    const sentences = clean.split(/(?<=[.!?])\s+/).filter(Boolean);
-    let short = sentences.slice(0, 2).join(" ");
-
-    // Limit to ~180 chars
-    if (short.length > 180) {
-      const cut = short.lastIndexOf(" ", 175);
-      short = short.slice(0, cut > 140 ? cut : 180) + "...";
+    // Keep richer interview-ready content on the card while preventing overlong text.
+    if (clean.length > 900) {
+      const cut = clean.lastIndexOf(" ", 860);
+      clean = clean.slice(0, cut > 500 ? cut : 860).trim() + "...";
     }
 
-    return short;
+    return clean;
   };
 
   const buildFallbackExplanation = (questionText, answerText, retryAfter = null, providerMsg = "") => {
@@ -91,7 +86,10 @@ ${short || "Review the core concept, explain the idea in your own words, then de
       }
 
       setLearnMoreLoading(true);
-      const res = await axiosInstance.post(API_PATHS.AI.GENERATE_EXPLANATION, { question: questionText });
+      const res = await axiosInstance.post(API_PATHS.AI.GENERATE_EXPLANATION, {
+        question: questionText,
+        answer: answerText || selectedAnswer || "",
+      });
       const data = res.data || {};
       const paragraphs = Array.isArray(data.explanation) ? data.explanation : [data.explanation || answerText || selectedAnswer];
       // Only the explanation body; title/question shown separately in the panel header

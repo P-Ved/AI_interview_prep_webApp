@@ -37,43 +37,43 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
         const templates = [
             {
                 question: `What are the core fundamentals you must know for ${roleText}?`,
-                answer: `Start with the basics of ${topicText}, explain one concept clearly, and give one real-world example.`,
+                answer: `I begin with the core fundamentals of ${topicText}, then connect each concept to real production behavior for ${roleText}. I include one concrete example from implementation to show practical depth instead of theory only. This creates interviewer confidence because it demonstrates both understanding and execution. I close with one trade-off and mitigation to show senior-level judgment.`,
             },
             {
                 question: `How would you solve a practical ${topicText} problem in an interview?`,
-                answer: "Clarify requirements first, break the problem into steps, and explain trade-offs in your chosen approach.",
+                answer: "I clarify requirements and constraints first, then break the solution into clear steps with reasoning at each stage. I walk through a concrete implementation path and highlight key decisions around scalability and reliability. This style makes a strong impression because it is structured and outcome-focused. I end with measurable impact and one risk mitigation plan.",
             },
             {
                 question: `What common mistakes should be avoided in ${topicText}?`,
-                answer: "Highlight frequent pitfalls, explain their impact, and share quick ways to prevent them.",
+                answer: "A common mistake is jumping to implementation without validating assumptions or edge cases. I avoid this by using quick validation checks, targeted tests, and production-focused observability. This improves delivery quality and reduces avoidable regressions after deployment. I also mention how I balance speed versus thoroughness for practical execution.",
             },
             {
                 question: `How do you debug issues related to ${topicText}?`,
-                answer: "Reproduce the issue, inspect logs and behavior, isolate root cause, and validate the fix.",
+                answer: "My debugging approach is to reproduce the issue quickly, isolate one variable at a time, and validate hypotheses with logs and metrics. I use focused tests to confirm root cause before applying a fix. This method reduces incident resolution time and increases confidence in the final solution. I also describe how I prevent similar failures with monitoring and postmortem actions.",
             },
             {
                 question: `How do you optimize performance when working with ${topicText}?`,
-                answer: "Measure bottlenecks first, apply focused optimizations, and confirm improvement with tests or metrics.",
+                answer: "I measure baseline performance first and prioritize the highest-impact bottleneck rather than random optimization. Then I apply targeted improvements and validate before-and-after results with clear metrics. This creates real business impact, such as lower latency or better throughput, without unnecessary complexity. I mention trade-offs and when further optimization is not worth the cost.",
             },
             {
                 question: `What security practices matter most for ${topicText}?`,
-                answer: "Cover input validation, access controls, and safe handling of sensitive data and secrets.",
+                answer: "I focus on input validation, strict authorization checks, safe secret management, and auditability. I explain how each control maps to common attack paths in real systems. This demonstrates security maturity and reduces operational risk during scaling. I also mention how automation and shared middleware keep security consistent across teams.",
             },
             {
                 question: `How would you test a ${topicText}-based solution?`,
-                answer: "Use a mix of unit and integration tests, include edge cases, and automate checks in CI.",
+                answer: "I use layered testing: unit tests for core logic, integration tests for workflows, and edge-case tests for resilience. I automate these checks in CI so quality remains consistent under delivery pressure. This approach reduces production defects and improves release confidence. I also explain how I keep test suites maintainable over time.",
             },
             {
                 question: `When would you choose one approach over another in ${topicText}?`,
-                answer: "Compare alternatives by complexity, scalability, maintainability, and team needs before deciding.",
+                answer: "I compare options by complexity, maintainability, scalability, and delivery speed, then tie the choice to business priorities. I explain one scenario where a simpler approach was better for time-to-market and later evolved safely. This shows balanced decision-making rather than overengineering. I finish by defining objective triggers for revisiting the design.",
             },
             {
                 question: `Describe a real-world challenge in ${topicText} and your solution.`,
-                answer: "State the problem, describe your steps, then explain the outcome and key lessons.",
+                answer: "I start with the real constraint, describe the step-by-step solution, and call out the toughest trade-off. Then I explain outcomes using measurable impact, such as reliability or delivery improvements. This narrative demonstrates ownership and clarity under pressure. I conclude with key lessons and how they influenced future decisions.",
             },
             {
                 question: `How do you explain ${topicText} to a junior developer?`,
-                answer: "Use simple language, one concrete example, and a clear mental model to build intuition.",
+                answer: "I teach ${topicText} with a simple mental model first, then reinforce it with one practical coding example. I validate understanding through a small guided task and feedback loop. This builds confidence quickly and reduces repeat mistakes in implementation. I mention how I document reusable patterns so onboarding stays efficient.",
             },
         ];
 
@@ -96,7 +96,7 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
             fallback.push({
                 question,
                 answer:
-                    "Start with a definition, give one practical example, and mention one trade-off to show depth.",
+                    "I start with a direct definition, then explain a practical implementation path with one concrete example. Next, I highlight measurable impact to show outcome ownership. I close with one trade-off and mitigation so the answer sounds balanced and interview-ready.",
             });
         }
 
@@ -239,7 +239,11 @@ const CreateSessionForm = ({ onClose, onSessionCreated }) => {
 
             let errorMessage = "Failed to create session. Please try again.";
 
-            if (error.response?.data?.message) {
+            if (error.response?.status === 500) {
+                const serverMessage = error.response?.data?.message || "Server Error";
+                const serverDetails = error.response?.data?.details || error.response?.data?.error;
+                errorMessage = serverDetails ? `${serverMessage}: ${serverDetails}` : serverMessage;
+            } else if (error.response?.data?.message) {
                 errorMessage = error.response.data.message;
             } else if (error.response?.status === 429) {
                 const retryAfter =

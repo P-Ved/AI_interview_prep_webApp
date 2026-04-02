@@ -12,9 +12,26 @@ const {generateInterviewQuestions, generateConceptExplanation} = require('./cont
 
 const app = express();
 
-// Fixed CORS configuration for your frontend port
+const envOrigins = (process.env.CLIENT_ORIGIN || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+const allowedOrigins = new Set([
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    ...envOrigins
+]);
+
+// CORS configuration for local + deployed frontends
 app.use(cors({
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    origin: (origin, callback) => {
+        // Allow requests from non-browser tools (no origin header)
+        if (!origin || allowedOrigins.has(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,

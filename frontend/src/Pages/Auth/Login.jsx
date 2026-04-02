@@ -79,9 +79,10 @@ const Login = () => {
         setMessage({ type: "error", text: serverMsg });
       } else if (error.request) {
         // No response (network/CORS/server down)
+        const targetServer = BASE_URL || window.location.origin;
         setMessage({
           type: "error",
-          text: `Cannot reach server at ${BASE_URL}. Is the backend running and CORS enabled?`,
+          text: `Cannot reach server at ${targetServer}. Is the backend running and CORS enabled?`,
         });
       } else {
         // Something else triggered the error

@@ -1,4 +1,17 @@
-export const BASE_URL = "http://localhost:8000";
+const ENV_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim();
+const isBrowser = typeof window !== "undefined";
+const isLocalEnv =
+  isBrowser &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1");
+
+// In production without env, use same-origin relative paths instead of localhost.
+const fallbackBaseUrl = isLocalEnv ? "http://localhost:8000" : "";
+
+export const BASE_URL = (ENV_BASE_URL || fallbackBaseUrl).replace(
+  /\/+$/,
+  ""
+);
 
 export const API_PATHS = {
   AUTH: {

@@ -1,5 +1,4 @@
 const OpenAI = require("openai");
-const { questionAnswerPrompt, conceptExplainPrompt } = require("../utils/prompts");
 
 const ai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,6 +14,74 @@ const QUESTIONS_CACHE_MAX_ENTRIES = 200;
 
 const QUESTIONS_MODEL = process.env.OPENAI_MODEL_QUESTIONS || "gpt-4o-mini";
 const EXPLAIN_MODEL = process.env.OPENAI_MODEL_EXPLAIN || "gpt-4o-mini";
+
+function buildInterviewReadyQuestionPrompt(role, experience, topicToFocus, numberOfQuestions) {
+  return `
+You are a senior technical interviewer and interview coach.
+Generate exactly ${numberOfQuestions} interview Q&A pairs for:
+- Role: ${role}
+- Experience: ${experience}
+- Topic: ${topicToFocus}
+
+Goal:
+Produce interview-ready answers that sound confident, practical, and impact-driven.
+
+Rules:
+1. Questions must be realistic, role-specific, and progress from fundamentals to advanced.
+2. Each answer must be 4-6 sentences (about 70-130 words) and include:
+   - A direct answer in the first sentence.
+   - A practical approach with one concrete example.
+   - A measurable impact (real or plausible metric).
+   - One trade-off/risk with mitigation.
+3. Use clear, concise language with no fluff.
+4. Avoid duplicates and unrelated topics.
+5. Return JSON only in exactly this shape:
+{
+  "questions": [
+    {"question": "...", "answer": "..."}
+  ]
+}
+Do not include markdown, code fences, or extra keys.
+`;
+}
+
+function buildDetailedConceptPrompt(question, answer = "") {
+  return `
+You are an expert technical interview mentor.
+Explain the following interview question in depth so a candidate can answer confidently.
+
+Question:
+"${question}"
+
+Candidate's current answer (optional context):
+"${answer || "Not provided"}"
+
+Build a detailed explanation from fundamentals to advanced depth.
+Include:
+1. What the interviewer is evaluating.
+2. Core concepts and mental model.
+3. Step-by-step reasoning path for solving/answering.
+4. Strong interview answer framework (what to say first, next, and last).
+5. Common mistakes and better alternatives.
+6. A strong sample answer.
+7. 2-3 likely follow-up questions with short guidance.
+
+Return JSON only in exactly this shape:
+{
+  "title": "Short descriptive title",
+  "explanation": [
+    "## Section heading\\nDetailed markdown content...",
+    "## Another heading\\nDetailed markdown content..."
+  ]
+}
+
+Formatting constraints:
+- explanation must be an array with 5 to 8 detailed markdown sections.
+- each section should contain short paragraphs and/or bullet points.
+- include a short code snippet only when truly relevant.
+- no extra keys, no surrounding markdown fences.
+`;
+}
 
 const questionsCache = new Map();
 
@@ -87,52 +154,52 @@ function buildFallbackQuestions(role, topicToFocus, count, existingQuestions = [
     {
       question: `What core fundamentals of ${topicText} are most important for a ${roleText} interview?`,
       answer:
-        "Define core concepts clearly, explain why they matter, and include one practical example from a real project.",
+        `For ${topicText}, I focus first on core concepts, then connect them to system behavior and business outcomes for a ${roleText} role. In practice, I explain one real project decision where these fundamentals shaped architecture or debugging speed. This approach usually improves delivery confidence because teams can reason about failures instead of guessing. One measured impact I mention is reducing production issue turnaround by 30-40% through clearer root-cause analysis. The trade-off is initial learning time, which I mitigate with focused documentation and repeatable checklists.`,
     },
     {
       question: `How would you design a simple solution using ${topicText} for a production scenario?`,
       answer:
-        "Start with requirements, propose a clear design, and explain trade-offs around scalability, reliability, and maintenance.",
+        `I start by clarifying requirements, constraints, and success metrics before proposing a simple design around ${topicText}. Then I break the solution into components, define data flow, and call out failure handling from day one. I usually include one concrete example from a production-style workflow to show practical feasibility. This structure creates impact by reducing rework and helping teams ship predictable releases faster. The trade-off is slightly more upfront design effort, mitigated by keeping scope tight and iterating in small milestones.`,
     },
     {
       question: `What common mistakes happen with ${topicText}, and how do you avoid them?`,
       answer:
-        "List common pitfalls, describe the impact, and show prevention steps such as validation, testing, and monitoring.",
+        `A common mistake in ${topicText} is optimizing too early without measuring bottlenecks or edge cases. I prevent this by validating assumptions with logs, tests, and baseline metrics before making changes. In interviews, I share an example where this approach avoided unnecessary complexity and improved stability. The impact is better engineering decisions and fewer regressions after deployment. The trade-off is extra analysis time, which I control by time-boxing diagnosis and focusing only on high-risk paths.`,
     },
     {
       question: `How do you debug issues related to ${topicText} during development and production?`,
       answer:
-        "Reproduce the issue, inspect logs and metrics, isolate root cause, and confirm the fix with targeted tests.",
+        `My debugging strategy for ${topicText} is to reproduce the issue quickly, then narrow scope with logs, metrics, and controlled tests. I isolate one variable at a time so the root cause is evidence-based rather than assumption-driven. I describe a production example where this method shortened incident resolution and prevented repeat failures. The impact is faster recovery and higher trust in fixes, often reflected in reduced incident duration. The trade-off is disciplined process overhead, mitigated by reusable runbooks and targeted observability.`,
     },
     {
       question: `When would you choose one approach over another in ${topicText}?`,
       answer:
-        "Compare options by complexity, cost, performance, and team familiarity, then justify the final decision with context.",
+        `I compare approaches for ${topicText} using complexity, scalability, maintainability, and team execution speed. Then I map each option to business priorities like reliability targets or delivery timelines. In interviews, I explain one concrete decision where I chose a simpler architecture first and upgraded later. This creates impact by balancing short-term delivery with long-term sustainability. The trade-off is potentially delayed optimization, which I mitigate by defining trigger metrics for when to evolve the design.`,
     },
     {
       question: `How do you optimize performance when working with ${topicText}?`,
       answer:
-        "Measure first, identify bottlenecks, apply focused optimizations, and validate improvements with benchmark comparisons.",
+        `I optimize ${topicText} by measuring baseline performance first, then prioritizing the biggest bottleneck instead of scattered tweaks. I apply focused changes, validate with benchmarks, and compare before-and-after metrics. I typically present one example where this raised throughput or reduced latency without major refactoring. The impact is meaningful performance gains with controlled engineering effort. The trade-off is that some low-priority issues remain, which I manage through a metric-driven optimization backlog.`,
     },
     {
       question: `What security checks should a ${roleText} apply for ${topicText}?`,
       answer:
-        "Cover input validation, access control, safe secret handling, and audit logging to reduce common security risks.",
+        `For ${topicText}, I prioritize input validation, authorization boundaries, secret hygiene, and audit visibility. I explain how these controls map directly to common exploit paths and operational risk. In interviews, I include one practical scenario where tightening access checks prevented data exposure. The impact is reduced security incidents and better compliance readiness. The trade-off is additional implementation complexity, which I mitigate with shared middleware, security linting, and automated policy checks.`,
     },
     {
       question: `How do you test and validate solutions built around ${topicText}?`,
       answer:
-        "Use unit, integration, and edge-case tests, then automate checks in CI to keep quality consistent.",
+        `I validate ${topicText} solutions with a layered strategy: unit tests for logic, integration tests for flow, and edge-case tests for resilience. I also automate quality gates in CI so failures are caught before release. In interviews, I share a case where this reduced production defects after feature rollout. The impact is higher release confidence and faster recovery when issues appear. The trade-off is test maintenance effort, which I reduce with stable test boundaries and clear ownership.`,
     },
     {
       question: `Describe a real-world challenge involving ${topicText} and how you would solve it.`,
       answer:
-        "Define the problem, break it into steps, explain implementation details, and include fallback or rollback planning.",
+        `I start by defining the real constraint around ${topicText}, then break execution into clear milestones with risk checks. I explain implementation details only after aligning on measurable success criteria. In interviews, I mention rollback and observability plans because they show production maturity. The impact is lower delivery risk and better stakeholder confidence during rollout. The trade-off is slightly slower initial launch, mitigated by phased release and fast feedback loops.`,
     },
     {
       question: `How would you explain ${topicText} to a junior engineer on your team?`,
       answer:
-        "Use plain language, one concrete example, and a simple mental model, then verify understanding with a small exercise.",
+        `I explain ${topicText} with a simple mental model first, then connect it to one practical code-level example. After that, I ask the junior engineer to apply it in a small guided task to verify understanding. In interviews, I position this as multiplying team productivity, not just sharing knowledge. The impact is faster onboarding and fewer repeated mistakes in delivery. The trade-off is mentoring time, which I offset by creating reusable examples and concise internal guides.`,
     },
   ];
 
@@ -157,11 +224,35 @@ function buildFallbackQuestions(role, topicToFocus, count, existingQuestions = [
     fallback.push({
       question,
       answer:
-        "Open with the core idea, give one practical example, and close with a trade-off to demonstrate depth.",
+        "I answer by starting with the core principle, then mapping it to a concrete implementation scenario. Next, I highlight one measurable business or user impact to show outcome ownership. I close with one trade-off and the mitigation strategy so the answer sounds balanced and senior. This approach consistently creates a strong interviewer impression because it is clear, practical, and impact-oriented.",
     });
   }
 
   return fallback.slice(0, count);
+}
+
+function buildDetailedExplanationFallback(question, answer = "", providerMessage = "") {
+  const questionText = String(question || "Interview question").trim();
+  const answerText = String(answer || "").trim();
+
+  const sampleAnswer = answerText
+    ? answerText
+    : "Start with a direct definition, explain your decision process, provide one concrete example, and close with trade-offs plus measurable impact.";
+
+  return {
+    title: questionText,
+    explanation: [
+      `## What The Interviewer Is Testing\n- Depth of understanding, not memorized definitions.\n- Ability to reason through real-world decisions.\n- Communication clarity under pressure.`,
+      `## Core Concept Breakdown\n- Define the concept in one sentence.\n- Explain how it behaves in production scenarios.\n- Connect it to reliability, scalability, and maintainability outcomes.`,
+      `## How To Structure Your Answer\n1. Start with a direct answer in one line.\n2. Walk through your approach step by step.\n3. Add one practical example from a project.\n4. Quantify impact (performance, reliability, or delivery speed).\n5. Close with one trade-off and mitigation.`,
+      `## Interview-Ready Sample Answer\n${sampleAnswer}`,
+      `## Common Mistakes To Avoid\n- Giving only theory with no practical example.\n- Skipping trade-offs and edge cases.\n- Using vague claims without measurable impact.`,
+      `## Strong Follow-up Questions To Prepare\n- What alternative approach would you choose and why?\n- How would this design behave at 10x scale?\n- How would you test and monitor this in production?`,
+      providerMessage
+        ? `## AI Service Note\nThe AI provider is temporarily unavailable: ${providerMessage}\nUse the structure above to practice confidently, then retry Learn More for a richer explanation.`
+        : `## Final Tip\nPractice your answer out loud in 60-90 seconds. Strong answers are clear, structured, and impact-focused.`,
+    ],
+  };
 }
 
 function isRateLimitError(err) {
@@ -237,19 +328,28 @@ function extractOpenAIText(response) {
   return "";
 }
 
-function ensureApiKey(res) {
-  if (!process.env.OPENAI_API_KEY) {
-    res.status(500).json({ message: "OPENAI_API_KEY is not configured on server" });
-    return false;
-  }
+function hasUsableApiKey() {
+  const key = String(process.env.OPENAI_API_KEY || "").trim();
+  if (!key) return false;
+
+  const normalized = key.toLowerCase();
+  const knownPlaceholders = new Set([
+    "openai_api_key",
+    "your_openai_api_key",
+    "sk-your_openai_api_key",
+    "replace_with_openai_key",
+  ]);
+
+  if (knownPlaceholders.has(normalized)) return false;
+  if (normalized.includes("your_openai")) return false;
+  if (normalized.includes("replace") && normalized.includes("key")) return false;
+
   return true;
 }
 
 // @desc Generate interview questions and answers
 const generateInterviewQuestions = async (req, res) => {
   try {
-    if (!ensureApiKey(res)) return;
-
     const { role, experience, topicToFocus } = req.body;
     const numberOfQuestions = sanitizeQuestionCount(req.body?.numberOfQuestions);
 
@@ -268,8 +368,21 @@ const generateInterviewQuestions = async (req, res) => {
       return res.status(200).json(cachedQuestions);
     }
 
-    const prompt = questionAnswerPrompt(role, experience, topicToFocus, numberOfQuestions);
-    const maxTokens = Math.min(900, Math.max(350, numberOfQuestions * 75));
+    if (!hasUsableApiKey()) {
+      console.warn("OPENAI_API_KEY missing/invalid. Returning local fallback questions.");
+      const fallbackQuestions = buildFallbackQuestions(role, topicToFocus, numberOfQuestions);
+      setCachedQuestions(cacheKey, fallbackQuestions);
+      return res.status(200).json(fallbackQuestions);
+    }
+
+    const prompt = buildInterviewReadyQuestionPrompt(
+      role,
+      experience,
+      topicToFocus,
+      numberOfQuestions
+    );
+    // Allow enough output budget for detailed interview-ready answers.
+    const maxTokens = Math.min(4200, Math.max(900, numberOfQuestions * 320));
 
     const startTime = Date.now();
     let response;
@@ -291,7 +404,11 @@ const generateInterviewQuestions = async (req, res) => {
         res.set("Retry-After", String(normalizedRetryAfter));
         return res.status(429).json({ message: providerMessage, retryAfter: normalizedRetryAfter });
       }
-      throw err;
+      const providerMessage = getProviderErrorMessage(err) || "AI service temporarily unavailable";
+      console.error("AI provider error while generating questions:", providerMessage);
+      const fallbackQuestions = buildFallbackQuestions(role, topicToFocus, numberOfQuestions);
+      setCachedQuestions(cacheKey, fallbackQuestions);
+      return res.status(200).json(fallbackQuestions);
     }
 
     const generationTime = Date.now() - startTime;
@@ -358,14 +475,16 @@ const generateInterviewQuestions = async (req, res) => {
 // @desc Generate explanation for a concept
 const generateConceptExplanation = async (req, res) => {
   try {
-    if (!ensureApiKey(res)) return;
-
-    const { question } = req.body;
+    const { question, answer } = req.body;
     if (!question) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const prompt = conceptExplainPrompt(question);
+    if (!hasUsableApiKey()) {
+      return res.status(200).json(buildDetailedExplanationFallback(question, answer));
+    }
+
+    const prompt = buildDetailedConceptPrompt(question, answer);
 
     let response;
     try {
@@ -373,20 +492,15 @@ const generateConceptExplanation = async (req, res) => {
         ai.chat.completions.create({
           model: EXPLAIN_MODEL,
           messages: [{ role: "user", content: prompt }],
-          max_tokens: 500,
-          temperature: 0.4,
+          max_tokens: 1100,
+          temperature: 0.3,
           response_format: { type: "json_object" },
         })
       );
     } catch (err) {
-      const retryAfter = extractRetryDelaySec(err);
-      if (isRateLimitError(err)) {
-        const normalizedRetryAfter = retryAfter || DEFAULT_RETRY_AFTER_SEC;
-        const providerMessage = getProviderErrorMessage(err) || "AI quota exceeded, retry later";
-        res.set("Retry-After", String(normalizedRetryAfter));
-        return res.status(429).json({ message: providerMessage, retryAfter: normalizedRetryAfter });
-      }
-      throw err;
+      const providerMessage = getProviderErrorMessage(err) || "AI explanation service unavailable";
+      console.error("AI provider error while generating explanation:", providerMessage);
+      return res.status(200).json(buildDetailedExplanationFallback(question, answer, providerMessage));
     }
 
     const rawText = extractOpenAIText(response);
@@ -397,16 +511,17 @@ const generateConceptExplanation = async (req, res) => {
     try {
       data = JSON.parse(cleanedText);
     } catch (parseErr) {
-      console.warn("Falling back to markdown explanation (invalid JSON)");
-      data = {
-        title: question,
-        explanation: rawText && rawText.length > 0 ? rawText : "No detailed explanation available.",
-      };
+      console.warn("Falling back to local structured explanation (invalid JSON)");
+      data = buildDetailedExplanationFallback(question, answer);
+      if (rawText && rawText.length > 0) {
+        data.explanation.unshift(`## Expanded Explanation\n${rawText}`);
+      }
     }
 
+    data.title = String(data.title || question).trim();
     if (data.explanation) {
       if (Array.isArray(data.explanation)) {
-        // already array
+        data.explanation = data.explanation.map((item) => String(item || "").trim()).filter(Boolean);
       } else if (typeof data.explanation === "string") {
         const paragraphs = data.explanation
           .split(/\n{1,}/)
@@ -417,16 +532,21 @@ const generateConceptExplanation = async (req, res) => {
         data.explanation = [String(data.explanation)];
       }
     } else {
-      data.explanation = ["No detailed explanation available."];
+      data.explanation = buildDetailedExplanationFallback(question, answer).explanation;
     }
 
     return res.status(200).json(data);
   } catch (error) {
     console.error("Error in generateConceptExplanation:", error);
-    return res.status(200).json({
-      title: "Explanation",
-      explanation: ["We couldn't parse a structured explanation right now. Please try again."],
-    });
+    return res
+      .status(200)
+      .json(
+        buildDetailedExplanationFallback(
+          req.body?.question,
+          req.body?.answer,
+          error.message || "Unexpected server error"
+        )
+      );
   }
 };
 

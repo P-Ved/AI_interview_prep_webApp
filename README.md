@@ -44,10 +44,17 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 OPENAI_API_KEY=your_openai_api_key
+CLIENT_ORIGIN=http://localhost:5173
 
 # Optional model overrides
 OPENAI_MODEL_QUESTIONS=gpt-4o-mini
 OPENAI_MODEL_EXPLAIN=gpt-4o-mini
+```
+
+Create `frontend/.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:5000
 ```
 
 Important:
@@ -88,19 +95,13 @@ Frontend API base URL is defined in:
 
 - `frontend/src/utils/apiPaths.js`
 
-Current value:
+Current behavior:
 
 ```js
-export const BASE_URL = "http://localhost:8000";
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 ```
 
-Backend default port in `backend/server.js` is `5000`, so update `BASE_URL` to:
-
-```js
-export const BASE_URL = "http://localhost:5000";
-```
-
-Or run backend on port `8000` via `.env`.
+For production, set `VITE_API_BASE_URL` to your deployed backend URL.
 
 ## Available Scripts
 
@@ -149,8 +150,11 @@ Authorization: Bearer <token>
 ## Deployment Notes
 
 - Set all backend env vars on your hosting platform.
+- Set `CLIENT_ORIGIN` on backend to your deployed frontend URL (comma-separated if multiple).
+- Set `VITE_API_BASE_URL` on frontend to your deployed backend URL.
 - Ensure CORS allows your deployed frontend URL.
 - Keep secrets in environment settings, not in code.
+- Vercel SPA routing is configured via `vercel.json` (root and `frontend/vercel.json`) to avoid `404: NOT_FOUND` on client-side routes.
 
 ## Troubleshooting
 

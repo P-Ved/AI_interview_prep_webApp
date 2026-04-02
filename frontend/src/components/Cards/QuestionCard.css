@@ -101,6 +101,7 @@
   margin: 0;
   color: var(--text-700);
   line-height: 1.55;
+  white-space: pre-line;
 }
 
 @media (max-width: 740px) {

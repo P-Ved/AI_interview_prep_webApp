@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'; // ✅ for redirect
 import './Auth.css';
 import { UserContext } from '../../context/Usercontext';
 import axiosInstance from '../../utils/axiosInstance'; // ✅ axios setup
-import { API_PATHS } from '../../utils/apiPaths'; // ✅ API endpoints
+import { API_PATHS, BASE_URL } from '../../utils/apiPaths'; // ✅ API endpoints
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -93,11 +93,24 @@ const SignUp = () => {
       }
     } catch (error) {
       console.error('SIGNUP ERROR:', error.response || error.message);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        'Something went wrong. Please try again.';
-      setMessage({ type: 'error', text: errorMessage });
+      if (error.response) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          'Something went wrong. Please try again.';
+        setMessage({ type: 'error', text: errorMessage });
+      } else if (error.request) {
+        const targetServer = BASE_URL || window.location.origin;
+        setMessage({
+          type: 'error',
+          text: `Cannot reach server at ${targetServer}. Is the backend running and CORS configured?`,
+        });
+      } else {
+        setMessage({
+          type: 'error',
+          text: error.message || 'Unexpected error occurred. Please try again.',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
