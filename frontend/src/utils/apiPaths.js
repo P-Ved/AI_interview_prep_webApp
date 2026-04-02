@@ -5,13 +5,20 @@ const isLocalEnv =
   (window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1");
 
-// In production without env, use same-origin relative paths instead of localhost.
+// Local fallback for development only.
 const fallbackBaseUrl = isLocalEnv ? "http://localhost:8000" : "";
+export const HAS_CONFIGURED_API_BASE_URL = Boolean(ENV_BASE_URL) || isLocalEnv;
 
 export const BASE_URL = (ENV_BASE_URL || fallbackBaseUrl).replace(
   /\/+$/,
   ""
 );
+
+if (isBrowser && !HAS_CONFIGURED_API_BASE_URL) {
+  console.warn(
+    "Missing VITE_API_BASE_URL in frontend deployment. API requests will fail until it is set."
+  );
+}
 
 export const API_PATHS = {
   AUTH: {

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { BASE_URL } from "./apiPaths";
+import { BASE_URL, HAS_CONFIGURED_API_BASE_URL } from "./apiPaths";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -13,6 +13,16 @@ const axiosInstance = axios.create({
 // Request Interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
+    const requestUrl = String(config?.url || "");
+    const isApiRequest = requestUrl.startsWith("/api/");
+    if (!HAS_CONFIGURED_API_BASE_URL && isApiRequest) {
+      const configError = new Error(
+        "Frontend is missing VITE_API_BASE_URL. Set it in deployment env, then redeploy."
+      );
+      configError.code = "API_BASE_URL_MISSING";
+      return Promise.reject(configError);
+    }
+
     const accessToken = localStorage.getItem("token");
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -48,6 +58,8 @@ axiosInstance.interceptors.response.use(
           error.retryAfter = retryAfter ? Number(retryAfter) : null;
           if (msg) console.error(msg);
       }
+    } else if (error.code === "API_BASE_URL_MISSING") {
+      console.error(error.message);
     } else if (error.code === "ECONNABORTED") {
       console.error("Request timeout. Please try again.");
     } else {
